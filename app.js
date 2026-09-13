@@ -295,6 +295,41 @@
     toast._timer = setTimeout(function () { toastEl.hidden = true; }, 2400);
   }
 
+  /* ---------- 导入文章包 / 单篇文稿 ---------- */
+
+  var Importer = window.Md2GZHImport;
+
+  function importPackage(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    var doc = Importer.pickDocument(files);
+    if (!doc) { toast('这个文件夹里没找到 .md / .markdown / .txt 文稿'); return; }
+    toast('正在读取 ' + files.length + ' 个文件…');
+    Importer.buildImageMap(files).then(function (built) {
+      return Importer.readFile(doc, true).then(function (text) {
+        var result = Importer.rewriteImageRefs(text, built.map);
+        editor.value = result.text;
+        convert().catch(function () {});
+        toast(Importer.describe(files, doc, result, built.used));
+      });
+    }).catch(function (error) {
+      toast(error && error.message ? error.message : '文章包读取失败');
+    });
+  }
+
+  function importSingleFile(file) {
+    if (!file) return;
+    Importer.readFile(file, true).then(function (text) {
+      editor.value = text;
+      convert().catch(function () {});
+      toast(/!\[[^\]]*\]\(/.test(text)
+        ? '✓ 已导入 ' + file.name + '，本地图片没跟进来，要图片就改用「导入文章包」'
+        : '✓ 已导入 ' + file.name);
+    }).catch(function (error) {
+      toast(error && error.message ? error.message : '文件读取失败');
+    });
+  }
+
   /* ---------- 主题下拉选择器 ---------- */
 
   var pickerButtons = {};
@@ -707,6 +742,20 @@
   exportImageBtn.addEventListener('click', exportLongImage);
   document.getElementById('btnSample').addEventListener('click', function () { editor.value = SAMPLE_MD; convert().catch(function () {}); });
   document.getElementById('btnClear').addEventListener('click', function () { editor.value = ''; convert().catch(function () {}); editor.focus(); });
+  var packageInput = document.getElementById('importPackageInput');
+  var singleInput = document.getElementById('importFileInput');
+  document.getElementById('btnImportPackage').addEventListener('click', function () { packageInput.click(); });
+  document.getElementById('btnImportFile').addEventListener('click', function () { singleInput.click(); });
+  packageInput.addEventListener('change', function () {
+    var picked = packageInput.files;
+    packageInput.value = '';
+    importPackage(picked);
+  });
+  singleInput.addEventListener('change', function () {
+    var picked = singleInput.files && singleInput.files[0];
+    singleInput.value = '';
+    importSingleFile(picked);
+  });
   document.querySelectorAll('[data-preview-width]').forEach(function (button) {
     button.addEventListener('click', function () {
       setPreviewWidth(this.getAttribute('data-preview-width'));

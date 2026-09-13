@@ -1,5 +1,7 @@
 > 🤝 **本项目由 [颜](https://github.com/yan9651688) × 蓝梦（[lanmengSakura](https://github.com/lanmengSakura)）联合打造** —— 排版引擎与产品体验来自颜，原创视觉与动效组件库来自蓝梦的 wechat-motion-layout-studio。
 
+> 📦 **本仓库是 [yan9651688/yituo-hub-studio](https://github.com/yan9651688/yituo-hub-studio) 的改版**（AGPL-3.0，fork 自上游）。排版引擎、18 + 15 套主题、74 组动静态组件全部来自上游，改动只有一处：**新增「导入文章包」**。校验规则、主题内容、复制结果都没有动，部署方式与原版完全一致。
+
 <div align="center">
 
 # YI TUO HUB STUDIO · 公众号排版工坊
@@ -37,6 +39,7 @@
 - **双关卡质量校验**：产物实时过平台红线检查（禁用标签/属性、`span leaf` 覆盖率、中英混排半角标点提醒），ERROR 清零才建议交付。
 - **一键复制 / 下载 / 导出长图**：富文本直接进剪贴板，公众号编辑器 ⌘V 即达；可下载 .html 兜底，也可用仓库内置的离线 `html2canvas` 将当前预览以 3× 清晰度导出为 PNG 长图。外链图片需支持 CORS，超长文章会按浏览器画布上限自动降低导出倍率。
 - **零构建零后端**：纯静态文件，无依赖无框架，任何一台 nginx 都能跑。
+- **导入文章包**（本版新增）：选一个文章文件夹，自动挑出里面的 `.md` / `.markdown` / `.txt`，把同目录的本地图片读进来内联进正文，并重写 Markdown 里的图片引用。`![](img/a.png)`、`![](<img/a.png>)`、Obsidian 双链 `![[img/a.png]]`、手写 `<img src="...">` 四种写法都认；外链图片不动，匹配不上的引用原样保留并在提示条里报数。图片超过 1.4 MB 会先等比缩到 1600px 再内联，避免正文变成几 MB 的 base64。另有「导入 MD / TXT」用于单篇文稿。
 
 ## 👀 产品预览
 
@@ -138,6 +141,35 @@ docker build -t yituo-hub-studio . && docker run -d -p 80:80 yituo-hub-studio
 ├── app.js            工坊前端（并列主题库 + 原创等级选择）
 ├── motion/           Production V6（74 组 / 148 个 SVG + 30 份最终静态/动态模板）
 └── deploy.sh / Dockerfile / nginx.conf
+```
+
+## 📦 本版改动（导入文章包）
+
+上游把「粘 Markdown」做得很顺，但正文里的本地图片没办法跟着进来。这一版补上这一步，做法参考 Punk微排 的「导入文章包」：
+
+- 工具栏新增两个按钮：**导入文章包**（选文件夹，`webkitdirectory`）和 **导入 MD / TXT**（选单个文件）。
+- 选文件夹后：挑出文稿（多篇时跳过 README、取最大的一篇）→ 把文件夹里的图片读成 data URL → 按「完整相对路径 + 逐级后缀」双份建索引 → 重写 Markdown 里的图片引用。
+- 大图（> 1.4 MB）先等比缩到 1600px 再内联，PNG / WebP 保持无损，其余转 JPEG；读不动就退回原图。
+- 提示条会报告：导入了哪篇、几张图内联、几处没匹配上。
+- 全流程都在浏览器本地完成，不经过任何服务端。
+
+改动落在这些文件：
+
+| 文件 | 说明 |
+|---|---|
+| `import-package.js` | 新增。导入逻辑与图片处理，UMD 形态，纯函数部分 node 里可直接测 |
+| `studio.html` | 工具栏两个按钮 + 两个隐藏 input，多加载一支 `import-package.js` |
+| `app.js` | 只加了 `importPackage()` / `importSingleFile()` 和事件绑定 |
+| `test-import.js` | 新增。19 项逻辑单测（路径归一化、四种引用写法、文稿挑选） |
+| `test-import-e2e.js` | 新增。jsdom 里真启动 `studio.html` 跑一遍导入 |
+| `qa-import-browser.js` | 新增。CDP 驱动真实 Chrome 跑导入，含大图缩放与页面报错检查 |
+
+```bash
+npm install
+npm run test:import        # 逻辑单测
+npm run test:import:e2e    # jsdom 端到端
+npm run qa:import          # 真实 Chrome（用 YITUO_QA_CHROME 可指定浏览器）
+npm run check              # 原有全套 + 逻辑单测
 ```
 
 ## 🤝 作者

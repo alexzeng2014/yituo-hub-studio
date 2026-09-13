@@ -62,6 +62,16 @@
   <section class="pane editor-pane">
     <div class="pane-toolbar">
       <strong>Markdown</strong>
+      <button id="btnImportPackage" class="btn tiny ghost" type="button" title="选一个文章文件夹，自动读取里面的 Markdown 和本地图片">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        导入文章包
+      </button>
+      <button id="btnImportFile" class="btn tiny ghost" type="button" title="导入单个 .md / .markdown / .txt 文件">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v5h5"/><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2z"/></svg>
+        导入 MD / TXT
+      </button>
+      <input id="importPackageInput" type="file" multiple hidden webkitdirectory directory>
+      <input id="importFileInput" type="file" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
       <span id="themePickerSlot" class="picker-slot"></span>
       <span id="levelPickerSlot" class="level-picker-slot" hidden></span>
       <span id="colorPickerSlot" class="color-picker-slot" hidden></span>
@@ -106,6 +116,7 @@
 <script src="themes.js"></script>
 <script src="converter.js"></script>
 <script src="validator.js"></script>
+<script src="import-package.js"></script>
 <script src="original-visuals-data.js"></script>
 <script src="original-visuals.js"></script>
 <script src="app.js"></script>
